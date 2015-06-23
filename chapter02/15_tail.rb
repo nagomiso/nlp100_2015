@@ -1,34 +1,31 @@
 #! env ruby
 
-file_path = ARGV[0]
-row_num = ARGV[1]
-
 def get_offset(file_path, row_num)
-  file = File.open(file_path)
-  cr_counter = 0
   offset = 0
-  until cr_counter > row_num.to_i
-    offset -= 1
-    begin
+  File.open(file_path) do |file|
+    lr_counter = 0
+    until lr_counter > row_num.to_i
+      offset -= 1
+      break if offset < -file.size
       file.seek(offset, IO::SEEK_END)
-    rescue
-      file.seek(0, IO::SEEK_SET)
-      break
+      char = file.read(1)
+      lr_counter += 1 if (char != "\n" && offset == -1) || char == "\n"
     end
-    cr_counter += 1 if file.read(1) == "\n"
   end
-  file.close
   offset + 1
 end
 
-def get_head(file_path, row_num = 5)
+def print_head(file_path, row_num = 5)
   offset = get_offset(file_path, row_num)
-  file = File.open(file_path)
-  file.seek(offset, IO::SEEK_END)
-  file.each_line do |line|
-    puts line.chomp
+  File.open(file_path) do |file|
+    file.seek(offset, IO::SEEK_END)
+    file.each_line do |line|
+      print line
+    end
   end
-  file.close
 end
 
-get_head(file_path, row_num)
+file_path = ARGV[0]
+row_num = ARGV[1].to_i
+
+print_head(file_path, row_num)
